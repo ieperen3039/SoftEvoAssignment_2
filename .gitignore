@@ -1,0 +1,8 @@
+.settings
+bin
+data
+META-INF
+.classpath
+.DS_Store
+.project
+build.properties
