@@ -7,38 +7,52 @@ import IO;
 import Map;
 import String;
 import List;
+import GoldenStandardReader;
 
 void detectClonesUsingStringsOnSmallSet() = detectClonesUsingStrings(|project://assignment2/data/small|);
 void detectClonesUsingStringsOnLargeSet() = detectClonesUsingStrings(|project://assignment2/data/large|);
 
+
+bool removeLine(str line){
+	return	startsWith(line, "/*") ||
+			startsWith(line, "*") ||
+			startsWith(line, "//") ||
+			startsWith(line, "@") ||
+			isEmpty(line) ||
+			// This is removing elements from the method self. Is this correct ?? Investigate
+			line == "}" ||
+			line == "{";
+}
 
 Content trimLines(Content lines) {
 	// Remove each line consisting of comments and for each line remove the trim
 	Content trimmed = [];
 	for(<loc nr, str line> <- lines){
 		str temp = trim(line);
-		if(!(startsWith(temp, "/*") || startsWith(temp, "*") || startsWith(temp, "//") || isEmpty(temp))){
+		if(!removeLine(temp)){
 			trimmed += <nr, temp>;
 		}
 	}
-	
 	return trimmed;
 }
 
+bool couldFragmentBeAClone(Content fragment) = size(fragment) >= 5;
 
-MethodContent filterContents(MethodContent methods){
-	list[loc] filtered = [];
+MethodContent filterMethods(MethodContent methods){
+	MethodContent filtered = ();
 	// Take all trimmed fragments which could be a clone (so have the appropriate length)
-	for(f <- methods, couldFragmentBeAClone(trimLines(methods[f]))){
-		filtered += f;
+	for(f <- methods){
+		Content temp = trimLines(methods[f]);
+		if(size(temp) > 1 && couldFragmentBeAClone(temp[1..])){
+			filtered += (f : temp);
+		}
 	}
-	// Return those fragments with trimmed lines
-	return (f : trimLines(methods[f]) | f <- filtered);
+	return filtered;
 }
 
 str combineFragment(Content fragment){
 	str combine = "";
-	map[str, str] remove = (" " : "");
+	map[str, str] remove = (" " : "", "\r" : "");
 	for(f <- fragment){
 		combine += escape(f.line, remove);
 	}
@@ -68,19 +82,55 @@ int stringCompare(str f1, str f2){
 Clone type1Detection(MethodContent methods){
 	Clone found = {};
 	map[loc, str] combined = (f: combineFragment(methods[f]) | f <- methods);
-	int count = 0;
 	for(f1 <- combined){
 		for(f2 <- combined, f2 != f1){
 			//int similarity = stringCompare(combined[f1], combined[f2]);
 			//if(similarity >= 50){
 				//println("<f1>, <f2> <similarity>");
-				//count += 1;
 			//}
 			// See comment of stringCompare() function
 			// Besides that is it much faster
 			if(combined[f1] == combined[f2]){
 				found += <f1, f2, type1(), 100>;
 				found += <f2, f1, type1(), 100>;
+			}
+		}
+	}
+	return found;
+}
+
+Content replaceFuncname(Content lines){
+	// Replace the function name to "funcname"
+	Content replaced = lines;
+	int sizeline = size(replaced[0].line);
+	int end = findFirst(replaced[0].line, "(");
+	int begin = findLast(substring(replaced[0].line, 0, end), " ") + 1;
+	str funcname = substring(replaced[0].line, begin, end);
+	replaced[0].line = replaceFirst(replaced[0].line, funcname, "funcname");
+	int sizeReplaced = size(replaced);
+	
+	// If the function is recursive, also replace the calls to its own
+	for(int i <- [1..sizeReplaced]){
+		if(contains(replaced[i].line, " " + funcname)){
+			replaced[i].line = replaceAll(replaced[i].line, funcname, "funcname");
+		}
+	}
+	return replaced;
+}
+
+Content replaceSIDnames(Content lines){
+	Content replaced = replaceFuncname(lines);
+	return replaced;
+}
+
+Clone type2Detection(MethodContent methods){
+	Clone found = {};
+	map[loc, str] combined = (f: combineFragment(replaceSIDnames(methods[f])) | f <- methods);
+	for(f1 <- combined){
+		for(f2 <- combined, f2 != f1){
+			if(combined[f1] == combined[f2]){
+				found += <f1, f2, type2(), 100>;
+				found += <f2, f1, type2(), 100>;
 			}
 		}
 	}
@@ -100,10 +150,78 @@ void detectClonesUsingStrings(loc dataDir) {
 	println("Step 1: Reading files");
 	MethodContent origMethods = readFiles(dataDir);
 	println("Step 2: Filtering methods");
-	MethodContent filtered = filterContents(origMethods);
+	MethodContent filtered = filterMethods(origMethods);
+	//println("<filtered>");
+	//writeFile(|project://assignment2/data/result.csv|, "<filtered>");
 	println("Step 3: Type1 detection");
-	Clone type1 = type1Detection(filtered);
+	Clone typeone = type1Detection(filtered);
 	// Simple output writing to use in a diff tool with the given result data set
-	writeFile(|project://assignment2/data/result.csv|, createOutput(type1));
+	//writeFile(|project://assignment2/data/result.csv|, createOutput(type1));
 	
+	
+	rel[loc f1, loc f2] typeoneIDs = {};
+	for(<f1, f2, typedef, similarity> <- typeone){
+		typeoneIDs += <f1, f2>;
+	}
+	
+	//println("<typeoneIDs>");
+	
+	
+	
+	println("Step 4: Type2 detection");
+	Clone typetwo = type2Detection(filtered);
+	Clone finaltypetwo = {};
+	for(<f1, f2, typedef, similarity> <- typetwo){
+			if(<f1, f2> notin typeoneIDs){
+				finaltypetwo += <f1, f2, typedef, similarity>;
+			}
+	}
+	
+	rel[loc f1, loc f2] typeteoIDs = {};
+	for(<f1, f2, typedef, similarity> <- typetwo){
+		typeteoIDs += <f1, f2>;
+	}
+	
+	//for(<f1, f2, typedef, similarity> <- finaltypetwo){
+		//println("<f1>, <f2>");
+	//}
+	//writeFile(|project://assignment2/data/resultrec.csv|, createOutput(finaltypetwo));
+	
+	
+	
+	
+	
+	
+	
+	rel[loc f1, loc f2] golden = {};
+	int sizegolden = 0;
+	Clone largeresults = readGoldenStandardLarge();
+	for(<f1, f2, typedef, similarity> <- largeresults, typedef == type2()){
+		golden += <f1, f2>;
+		sizegolden += 1;
+	}
+	
+	
+	int sizeone = 0;
+	
+	int count = 0;
+	for(<f1, f2, typedef, similarity> <- finaltypetwo){
+		sizeone += 1;
+		if(<f1, f2> notin golden){
+			//println("<f1>, <f2>");
+			count += 1;
+		} else {
+			println("<f1>, <f2>");
+		}
+	}
+	println("<sizeone> - <sizegolden> should be <count>");
+	
+	
+	
+	
+
 }
+
+
+
+
