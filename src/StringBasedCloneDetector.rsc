@@ -111,15 +111,31 @@ Content replaceFuncname(Content lines){
 	
 	// If the function is recursive, also replace the calls to its own
 	for(int i <- [1..sizeReplaced]){
-		if(contains(replaced[i].line, " " + funcname)){
+		if(startsWith(replaced[i].line, funcname)){
 			replaced[i].line = replaceAll(replaced[i].line, funcname, "funcname");
 		}
 	}
 	return replaced;
 }
 
+Content replaceFuncvariables(Content lines){
+	// Replace the function input variables to "funcvarX" where X is a numer
+	Content replaced = lines;
+
+	return replaced;
+}
+
+Content replaceMethodvariables(Content lines){
+	// Replace the method variables to "varX" where X is a numer
+	Content replaced = lines;
+
+	return replaced;
+}
+
 Content replaceSIDnames(Content lines){
 	Content replaced = replaceFuncname(lines);
+	replaced = replaceFuncvariables(replaced);
+	replaced = replaceMethodvariables(replaced);
 	return replaced;
 }
 
