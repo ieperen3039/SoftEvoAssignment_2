@@ -99,15 +99,24 @@ Clone type1Detection(MethodContent methods){
 	return found;
 }
 
+loc tempfname1 = |project://assignment2/data/resultrec.csv|;
+loc tempfname2 = |project://assignment2/data/resultrec.csv|;
+
 Content replaceFuncname(Content lines){
 	// Replace the function name to "funcname"
 	Content replaced = lines;
-	int sizeline = size(replaced[0].line);
 	int end = findFirst(replaced[0].line, "(");
 	int begin = findLast(substring(replaced[0].line, 0, end), " ") + 1;
 	str funcname = substring(replaced[0].line, begin, end);
 	replaced[0].line = replaceFirst(replaced[0].line, funcname, "funcname");
 	int sizeReplaced = size(replaced);
+	
+	
+	int retBegin = findLast(substring(replaced[0].line, 0, begin - 1), " ") + 1;
+	if(retBegin > 0){
+		str retname = substring(replaced[0].line, retBegin, begin - 1);
+		replaced[0].line = replaceFirst(replaced[0].line, retname, "ret");
+	}
 	
 	// If the function is recursive, also replace the calls to its own
 	for(int i <- [1..sizeReplaced]){
@@ -115,27 +124,106 @@ Content replaceFuncname(Content lines){
 			replaced[i].line = replaceAll(replaced[i].line, funcname, "funcname");
 		}
 	}
+	
+	if(funcname == "decodeFileToFile"){
+		tempfname1 = replaced[0].nr;
+	}
+	if(funcname == "encodeFileToFile"){
+		tempfname2 = replaced[0].nr;
+	}
+	
 	return replaced;
 }
 
 Content replaceFuncvariables(Content lines){
-	// Replace the function input variables to "funcvarX" where X is a numer
+	// Replace the function input variables to "funcvarX" where X is a number
+	Content replaced = lines;
+	int begin = findFirst(replaced[0].line, "(") + 1;
+	int end = findFirst(replaced[0].line, ")");
+	if(begin != end){
+		str funcvars = substring(replaced[0].line, begin, end);
+		list[str] vars = split(",", funcvars);
+		int count = 0;
+		str funcvarsrep = "";
+		for(v <- vars){
+			count += 1;
+			str var = trim(substring(v, findLast(v, " ")));
+			str rep = "fvar<count>";
+			if(funcvarsrep != ""){
+				funcvarsrep += ", ";
+			}
+			funcvarsrep += "type <rep>";
+			int count2 = 0;
+			for(<nr, l> <- replaced){
+				if(count2 > 0){
+					replaced[count2].line = replaceFirst(l, var, rep);
+				}
+				count2 += 1;
+			}
+		}
+		replaced[0].line = replaceFirst(replaced[0].line, funcvars, funcvarsrep);
+	}
+	return replaced;
+}
+
+Content replaceFunctionExeptions(Content lines){
+	// Replace the functions thrown exceptions to excep
+	Content replaced = lines;
+	int begin = findFirst(replaced[0].line, "throws");
+	if(begin > 0){
+		int end = findFirst(replaced[0].line, "{");
+		list[str] exceps = split(",", trim(substring(replaced[0].line, begin + 6, end)));
+		for(exp <- exceps){
+			replaced[0].line = replaceAll(replaced[0].line, exp, "exp");
+		}
+	}
+	return replaced;
+}
+
+Content replaceMethodvariables(Content lines){
+	// Replace the method variables to "varX" where X is a number
 	Content replaced = lines;
 
 	return replaced;
 }
 
-Content replaceMethodvariables(Content lines){
-	// Replace the method variables to "varX" where X is a numer
+Content replaceMethodFuncCalls(Content lines){
+	// Replace the method variables to "varX" where X is a number
 	Content replaced = lines;
+	int sizeReplaced = size(replaced);
+	int count = 0;
+	for(int i <- [1..sizeReplaced]){
+		int begin = findFirst(replaced[i].line, "(");
+		if(begin > 0){
+			count += 1;
+			replaced[i].line = replaceAll(replaced[i].line, substring(replaced[i].line, 0, begin), "funccall<count>");
+		}
+	}
+	return replaced;
+}
 
+Content replaceMethodStrings(Content lines){
+	Content replaced = lines;
+	int sizeReplaced = size(replaced);
+	int count = 0;
+	for(int i <- [1..sizeReplaced]){
+		int begin = findFirst(replaced[i].line, "\"");
+		if(begin > 0){
+			count += 1;
+			int end = findLast(replaced[i].line, "\"");
+			replaced[i].line = replaceAll(replaced[i].line, substring(replaced[i].line, begin + 1, end), "string<count>");
+		}
+	}
 	return replaced;
 }
 
 Content replaceSIDnames(Content lines){
 	Content replaced = replaceFuncname(lines);
 	replaced = replaceFuncvariables(replaced);
+	replaced = replaceFunctionExeptions(replaced);
 	replaced = replaceMethodvariables(replaced);
+	replaced = replaceMethodFuncCalls(replaced);
+	replaced = replaceMethodStrings(replaced);
 	return replaced;
 }
 
@@ -147,6 +235,11 @@ Clone type2Detection(MethodContent methods){
 			if(combined[f1] == combined[f2]){
 				found += <f1, f2, type2(), 100>;
 				found += <f2, f1, type2(), 100>;
+			}
+			if(methods[f1][0].nr == tempfname1 && methods[f2][0].nr == tempfname2){
+				println("<combined[f1]>");
+				println("<combined[f2]>");
+				println("");
 			}
 		}
 	}
@@ -186,6 +279,7 @@ void detectClonesUsingStrings(loc dataDir) {
 	
 	println("Step 4: Type2 detection");
 	Clone typetwo = type2Detection(filtered);
+	
 	Clone finaltypetwo = {};
 	for(<f1, f2, typedef, similarity> <- typetwo){
 			if(<f1, f2> notin typeoneIDs){
@@ -193,17 +287,17 @@ void detectClonesUsingStrings(loc dataDir) {
 			}
 	}
 	
-	rel[loc f1, loc f2] typeteoIDs = {};
+	rel[loc f1, loc f2] typetwoIDs = {};
 	for(<f1, f2, typedef, similarity> <- typetwo){
-		typeteoIDs += <f1, f2>;
+		typetwoIDs += <f1, f2>;
 	}
 	
 	//for(<f1, f2, typedef, similarity> <- finaltypetwo){
 		//println("<f1>, <f2>");
 	//}
-	//writeFile(|project://assignment2/data/resultrec.csv|, createOutput(finaltypetwo));
+	writeFile(|project://assignment2/data/resultrec.csv|, createOutput(finaltypetwo));
 	
-	
+	println("Post processing");
 	
 	
 	
@@ -217,17 +311,24 @@ void detectClonesUsingStrings(loc dataDir) {
 		sizegolden += 1;
 	}
 	
+	// Print what in the golden standard but not found
+	for(<f1, f2> <- golden){
+		if(<f1, f2> notin typetwoIDs){
+			//println("<f1>, <f2>");
+			;
+		}
+	}
+	
 	
 	int sizeone = 0;
 	
+	// Print what found but no in the standard
 	int count = 0;
 	for(<f1, f2, typedef, similarity> <- finaltypetwo){
 		sizeone += 1;
 		if(<f1, f2> notin golden){
 			//println("<f1>, <f2>");
 			count += 1;
-		} else {
-			println("<f1>, <f2>");
 		}
 	}
 	println("<sizeone> - <sizegolden> should be <count>");
