@@ -15,12 +15,14 @@ void detectClonesUsingAstsOnLargeSet() = detectClonesUsingAsts(|project://assign
 void detectClonesUsingAsts(loc dataDir) {
 	map[loc l, Declaration d] asts = parseFiles(dataDir);
 	
-	tuple[Declaration a, Declaration b] clones;
+	list[Clone] clones;
 	
-	for (<f1, d1> <- asts){
-		for (<f2, d2> <- asts){
-			bool clone = areClones(d1, d2);
-			clones += <d1, d2>;
+	for (f1 <- asts){
+		for (f2 <- asts, f1 != f2){
+			Declaration d1 = asts[f1];
+			Declaration d2 = asts[f2];
+			
+			findClones(d1, d2);
 		}
 	}
 }
