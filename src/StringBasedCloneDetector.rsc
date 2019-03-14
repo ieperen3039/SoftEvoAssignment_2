@@ -125,10 +125,10 @@ Content replaceFuncname(Content lines){
 		}
 	}
 	
-	if(funcname == "decodeFileToFile"){
+	if(funcname == "encodeFileToFile"){
 		tempfname1 = replaced[0].nr;
 	}
-	if(funcname == "encodeFileToFile"){
+	if(funcname == "decodeFileToFile"){
 		tempfname2 = replaced[0].nr;
 	}
 	
@@ -187,6 +187,44 @@ Content replaceMethodvariables(Content lines){
 	return replaced;
 }
 
+Content replaceKeywords(Content lines){
+	Content replaced = lines;
+	int j = 0;
+	for(<nr, l> <- replaced){
+		if(toLowerCase(replaced[j].line) != replaced[j].line){
+			int i;
+			sizeline = size(replaced[j].line);
+			int count = 0;
+			str result = replaced[j].line;
+			for(i <- [0..sizeline]){
+				int number = charAt(replaced[j].line, i);
+				if(number >= 65 && number <= 90 || number == 95){
+					int prev;
+					if(i > 0){
+						 prev = charAt(replaced[j].line, i - 1);
+					} else{
+						prev = 0;
+					}
+					if((prev < 48 || prev > 57) && (prev < 97 || prev > 122)){
+						count += 1;
+					}
+				} else{
+					if((number < 48 || number > 57) && (number < 97 || number > 122)){
+						if(count > 1){
+							str rep = substring(replaced[j].line, i - count, i);
+							result = replaceAll(result, rep, "keyword");
+						}
+					}
+					count = 0;
+				}
+			}
+			replaced[j].line = result;
+		}
+		j += 1;
+	}
+	return replaced;
+}
+
 Content replaceMethodFuncCalls(Content lines){
 	// Replace the method variables to "varX" where X is a number
 	Content replaced = lines;
@@ -224,6 +262,7 @@ Content replaceSIDnames(Content lines){
 	replaced = replaceMethodvariables(replaced);
 	replaced = replaceMethodFuncCalls(replaced);
 	replaced = replaceMethodStrings(replaced);
+	replaced = replaceKeywords(replaced);
 	return replaced;
 }
 
@@ -327,7 +366,7 @@ void detectClonesUsingStrings(loc dataDir) {
 	for(<f1, f2, typedef, similarity> <- finaltypetwo){
 		sizeone += 1;
 		if(<f1, f2> notin golden){
-			//println("<f1>, <f2>");
+			println("<f1>, <f2>");
 			count += 1;
 		}
 	}
