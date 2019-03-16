@@ -8,4 +8,4 @@ data CloneType
   ;
 
 alias Clone = rel[loc fragment1, loc fragment2, CloneType cloneType, int lineSimilarity];
-
+alias MatchedIDs = rel[loc f1, loc f2];
