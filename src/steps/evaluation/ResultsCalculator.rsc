@@ -106,6 +106,10 @@ void calculateConfusionMatrix(Clone calculated, Clone golden) {
   real fmeas2 = precision(toReal(2) * ((recallt2 * prest2) / (recallt2 + prest2)), 5);
   real fmeas3 = precision(toReal(2) * ((recallt3 * prest3) / (recallt3 + prest3)), 5);
   
+  real recallavg = precision((recallt1 + recallt2 + recallt3) / 3, 5);
+  real presavg = precision((prest1 + prest2 + prest3) / 3, 5);
+  real fmeasavg = precision((fmeas1 + fmeas2 + fmeas3) / 3, 5);
+  
   println("                                               Pridicted by the method");
   println("\t\t\t\t\tType 1\t\tType 2\t\tType 3\t\tNot a clone pair");
   println("\t\tType 1\t\t\t <count[0]>\t\t <count[1]>\t\t <count[2]>\t\t <count[3]>");
@@ -113,7 +117,7 @@ void calculateConfusionMatrix(Clone calculated, Clone golden) {
   println("Manually\tType 3\t\t\t <count[8]>\t\t <count[9]>\t\t <count[10]>\t\t <count[11]>");
   println("\t\tNot a clone pair\t <count[12]>\t\t <count[13]>\t\t <count[14]>");
   println("");
-  println("Recall:\t\t\t\t\t <recallt1>\t\t <recallt2>\t\t <recallt3>");
-  println("Precision:\t\t\t\t <prest1>\t\t <prest2>\t\t <prest3>");
-  println("F-measue:\t\t\t\t <fmeas1>\t\t <fmeas2>\t\t <fmeas3>");
+  println("Recall:\t\t\t\t\t <recallt1>\t\t <recallt2>\t\t <recallt3>\t\tmacro-average: <recallavg>");
+  println("Precision:\t\t\t\t <prest1>\t\t <prest2>\t\t <prest3>\t\tmacro-average: <presavg>");
+  println("F-measue:\t\t\t\t <fmeas1>\t\t <fmeas2>\t\t <fmeas3>\t\tmacro-average: <fmeasavg>");
 }
