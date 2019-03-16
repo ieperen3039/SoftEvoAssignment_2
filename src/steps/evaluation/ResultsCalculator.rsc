@@ -94,9 +94,9 @@ void calculateConfusionMatrix(Clone calculated, Clone golden) {
   	}
   }
   
-  real recallt1 = precision(toReal(size(calculatedtype1)) / toReal(size(goldentype1)) * 100, 5);
-  real recallt2 = precision(toReal(size(calculatedtype2)) / toReal(size(goldentype2)) * 100, 5);
-  real recallt3 = precision(toReal(size(calculatedtype3)) / toReal(size(goldentype3)) * 100, 5);
+  real recallt1 = precision(toReal(count[0]) / toReal(size(goldentype1)) * 100, 5);
+  real recallt2 = precision(toReal(count[5]) / toReal(size(goldentype2)) * 100, 5);
+  real recallt3 = precision(toReal(count[10]) / toReal(size(goldentype3)) * 100, 5);
   
   real prest1 = precision(toReal(count[0]) / toReal(size(calculatedtype1)) * 100, 5);
   real prest2 = precision(toReal(count[5]) / toReal(size(calculatedtype2)) * 100, 5);

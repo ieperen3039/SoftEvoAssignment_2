@@ -15,8 +15,8 @@ import String;
 import List;
 import GoldenStandardReader;
 
-void detectClonesUsingStringsOnSmallSet() = detectClonesUsingStrings(|project://assignment2/data/small|);
-void detectClonesUsingStringsOnLargeSet() = detectClonesUsingStrings(|project://assignment2/data/large|);
+void detectClonesUsingStringsOnSmallSet() = detectClonesUsingStrings(|project://assignment2/data/small|, "small");
+void detectClonesUsingStringsOnLargeSet() = detectClonesUsingStrings(|project://assignment2/data/large|, "large");
 
 str createOutput(Clone input){
 	str output = "fragment1,fragment2,cloneType,lineSimilarity\n";
@@ -65,11 +65,11 @@ Clone typeDetection(MethodContent methods){
 }
 
 
-void detectClonesUsingStrings(loc dataDir) {
-	println("Step 1: Reading files");
+void detectClonesUsingStrings(loc dataDir, str indicator) {
+	println("(1/8) Reading files");
 	MethodContent origMethods = readFiles(dataDir);
 	
-	println("Step 2: Filtering methods");
+	println("(2/8) Filtering methods");
 	MethodContent filtered = filterMethods(origMethods);
 	
 	// Turns out detecting all types and then trowing away the duplicates
@@ -77,131 +77,27 @@ void detectClonesUsingStrings(loc dataDir) {
 	//println("Step 3: Type detection");
 	//Clone typedetection = typeDetection(filtered);
 	
-	println("Step 3: Type1 detection");
+	println("(3/8) Type1 detection");
 	Clone typeone = type1Detection(filtered);
 	
-	println("Step 4: Type2 detection");
+	println("(4/8) Type2 detection");
 	Clone typetwo = type2Detection(filtered);
 
-	println("Step 5: Type3 detection");
+	println("(5/8) Type3 detection");
 	Clone typethree = type3Detection(filtered);
 	
-	println("Step 6: Duplicate removal");
+	println("(6/8) Duplicate removal");
 	Clone final = RemoveTypeDuplicates(typeone, typetwo, typethree);
 	
-	println("Step 7: Creating output file");
+	println("(7/8) Creating output file");
 	writeFile(|project://assignment2/data/result.csv|, createOutput(final));
 	
-	println("Step 8: Showing results");
-	Clone goldenresults = readGoldenStandardLarge();
+	println("(8/8) Showing results");
+	Clone goldenresults;
+	if(indicator == "small"){
+		goldenresults= readGoldenStandardSmall();
+	} else{
+		goldenresults = readGoldenStandardLarge();
+	}
 	calculateConfusionMatrix(final, goldenresults);
-	
-	
-	
-	
-	rel[loc f1, loc f2] golden = {};
-	goldenresults = readGoldenStandardSmall();
-	for(<f1, f2, typedef, similarity> <- goldenresults, typedef == type3()){
-		golden += <f1, f2>;
-		//println("<f1>, <f2>, <similarity>");
-	}
-	
-	rel[loc f1, loc f2] typeIDs = {};
-	for(<f1, f2, typedef, similarity> <- typethree){
-		typeIDs += <f1, f2>;
-	}
-	
-	// Print what is in the golden standard but not found
-	for(<f1, f2> <- golden){
-		if(<f1, f2> notin typeIDs){
-			//println("<f1>, <f2>");
-			;
-		}
-	}
-	
-	
-	
-	
-	// Simple output writing to use in a diff tool with the given result data set
-	//writeFile(|project://assignment2/data/result.csv|, createOutput(type1));
-	
-	
-	//rel[loc f1, loc f2] typeoneIDs = {};
-	//for(<f1, f2, typedef, similarity> <- typeone){
-		//typeoneIDs += <f1, f2>;
-	//}
-	
-	//println("<typeoneIDs>");
-	
-	
-	
-	//println("Step 4: Type2 detection");
-	//Clone typetwo = type2Detection(filtered);
-	
-	//Clone finaltypetwo = {};
-	//for(<f1, f2, typedef, similarity> <- typetwo){
-			//if(<f1, f2> notin typeoneIDs){
-				//finaltypetwo += <f1, f2, typedef, similarity>;
-			//}
-	//}
-	
-	//rel[loc f1, loc f2] typetwoIDs = {};
-	//for(<f1, f2, typedef, similarity> <- typetwo){
-		//typetwoIDs += <f1, f2>;
-	//}
-	
-	//for(<f1, f2, typedef, similarity> <- finaltypetwo){
-		//println("<f1>, <f2>");
-	//}
-	//writeFile(|project://assignment2/data/resultrec.csv|, createOutput(finaltypetwo));
-	
-	//println("Post processing");
-	
-	
-	
-	//smallresults = readGoldenStandardSmall();
-	//for(<f1, f2, typedef, similarity> <- smallresults, typedef == type3()){
-		//println("<f1>, <f2>, <similarity>");
-	//}
-	
-	
-	
-	//rel[loc f1, loc f2] golden = {};
-	//int sizegolden = 0;
-	//largeresults = readGoldenStandardLarge();
-	//for(<f1, f2, typedef, similarity> <- largeresults, typedef == type3()){
-		//golden += <f1, f2>;
-		//sizegolden += 1;
-	//}
-	
-	// Print what in the golden standard but not found
-	//for(<f1, f2> <- golden){
-		//if(<f1, f2> notin typetwoIDs){
-			//println("<f1>, <f2>");
-			//;
-		//}
-	//}
-	
-	
-	//int sizeone = 0;
-	
-	// Print what found but no in the standard
-	//int count = 0;
-	//for(<f1, f2, typedef, similarity> <- finaltypetwo){
-		//sizeone += 1;
-		//if(<f1, f2> notin golden){
-			//println("<f1>, <f2>");
-			//count += 1;
-		//}
-	//}
-	//println("<sizeone> - <sizegolden> should be <count>");
-	
-	
-	
-	
-
 }
-
-
-
-

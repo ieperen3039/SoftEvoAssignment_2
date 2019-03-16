@@ -43,7 +43,7 @@ Clone type3Detection(MethodContent methods){
 	for(f1 <- methods){
 		for(f2 <- methods, f2 != f1){
 			int similarity = calculateSimilarity(f1, methods[f1], f2, methods[f2]);
-			if(similarity >= 50){
+			if(similarity >= 70){
 				found += <f1, f2, type3(), similarity>;
 				found += <f2, f1, type3(), similarity>;
 			}
