@@ -10,11 +10,11 @@ bool removeLine(str line){
 	return	startsWith(line, "/*") ||
 			startsWith(line, "*") ||
 			startsWith(line, "//") ||
-			isEmpty(line) ||
+			isEmpty(line); //||
 			// This is removing elements from the method self. Is this correct ?? Investigate
 			//startsWith(line, "@") ||
-			line == "}" ||
-			line == "{";
+			//line == "}" ||
+			//line == "{";
 }
 
 Content trimLines(Content lines) {
@@ -29,7 +29,7 @@ Content trimLines(Content lines) {
 	return trimmed;
 }
 
-bool couldFragmentBeAClone(Content fragment) = size(fragment) >= 6;
+//bool couldFragmentBeAClone(Content fragment) = size(fragment) >= 6;
 
 MethodContent filterMethods(MethodContent methods){
 	MethodContent filtered = ();
