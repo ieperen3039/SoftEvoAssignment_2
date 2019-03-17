@@ -7,12 +7,14 @@ data CloneType
   | type2()
   | type3()
   ;
+  
+alias MatchedIDs = rel[loc f1, loc f2];
 
 alias Clone = rel[loc fragment1, loc fragment2, CloneType cloneType, int lineSimilarity];
 
 bool isLess(CloneType a, CloneType b) = 
 	(type1() := a && type2() := b) || (type1() := a && type3() := b) || (type2() := a && type3() := b);
-	
+
 str createOutput(Clone input){
 	str output = "fragment1,fragment2,cloneType,lineSimilarity\n";
 	for(<f1, f2, typedef, similarity> <- input){
@@ -56,4 +58,3 @@ void compareResults(Clone clones, Clone largeresults){
 	
 	println("found <cloneSize> clones, of which <invalids> were incorrect and missing <misseds>");
 }
-	

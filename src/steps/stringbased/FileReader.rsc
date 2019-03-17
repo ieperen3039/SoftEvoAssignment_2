@@ -41,5 +41,5 @@ Content readAndAnnotateFile(loc file) {
   return result;
 }
 
-bool couldFragmentBeAClone(Content fragment) = fragment[-1].nr.end.line - fragment[0].nr.begin.line >= 5 when size(fragment) > 0;
+bool couldFragmentBeAClone(Content fragment) = fragment[-1].nr.end.line - fragment[0].nr.begin.line >= 7 when size(fragment) > 0;
 default bool couldFragmentBeAClone(Content fragment) { throw "Unable to determine whether fragment could be a clone according to the definition"; }
