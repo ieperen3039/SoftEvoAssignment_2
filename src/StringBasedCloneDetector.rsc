@@ -285,15 +285,6 @@ Clone type2Detection(MethodContent methods){
 	return found;
 }
 
-str createOutput(Clone input){
-	str output = "fragment1,fragment2,cloneType,lineSimilarity\n";
-	for(<f1, f2, typedef, similarity> <- input){
-		output += "\"<f1>\",\"<f2>\",<typedef>,<similarity>\n";
-	}
-	return output;
-}
-
-
 void detectClonesUsingStrings(loc dataDir) {
 	println("Step 1: Reading files");
 	MethodContent origMethods = readFiles(dataDir);
@@ -314,21 +305,14 @@ void detectClonesUsingStrings(loc dataDir) {
 	
 	//println("<typeoneIDs>");
 	
-	
-	
 	println("Step 4: Type2 detection");
 	Clone typetwo = type2Detection(filtered);
 	
 	Clone finaltypetwo = {};
 	for(<f1, f2, typedef, similarity> <- typetwo){
-			if(<f1, f2> notin typeoneIDs){
-				finaltypetwo += <f1, f2, typedef, similarity>;
-			}
-	}
-	
-	rel[loc f1, loc f2] typetwoIDs = {};
-	for(<f1, f2, typedef, similarity> <- typetwo){
-		typetwoIDs += <f1, f2>;
+		if(<f1, f2> notin typeoneIDs){
+			finaltypetwo += <f1, f2, typedef, similarity>;
+		}
 	}
 	
 	//for(<f1, f2, typedef, similarity> <- finaltypetwo){
@@ -336,46 +320,10 @@ void detectClonesUsingStrings(loc dataDir) {
 	//}
 	writeFile(|project://assignment2/data/resultrec.csv|, createOutput(finaltypetwo));
 	
+	
 	println("Post processing");
 	
-	
-	
-	
-	
-	rel[loc f1, loc f2] golden = {};
-	int sizegolden = 0;
-	Clone largeresults = readGoldenStandardLarge();
-	for(<f1, f2, typedef, similarity> <- largeresults, typedef == type2()){
-		golden += <f1, f2>;
-		sizegolden += 1;
-	}
-	
-	// Print what in the golden standard but not found
-	for(<f1, f2> <- golden){
-		if(<f1, f2> notin typetwoIDs){
-			//println("<f1>, <f2>");
-			;
-		}
-	}
-	
-	
-	int sizeone = 0;
-	
-	// Print what found but no in the standard
-	int count = 0;
-	for(<f1, f2, typedef, similarity> <- finaltypetwo){
-		sizeone += 1;
-		if(<f1, f2> notin golden){
-			println("<f1>, <f2>");
-			count += 1;
-		}
-	}
-	println("<sizeone> - <sizegolden> should be <count>");
-	
-	
-	
-	
-
+	compareResults(typetwo, readGoldenStandardLarge());
 }
 
 
